@@ -17,7 +17,7 @@ from dogen.version import version
 from dogen.errors import Error
 
 class Generator(object):
-    def __init__(self, log, descriptor, output, template=None, scripts=None, additional_scripts=None, without_sources=False, dist_git=False, ssl_verify=None):
+    def __init__(self, log, descriptor, output, template=None, scripts=None, additional_scripts=None, without_sources=False, dist_git=False, ssl_verify=None, rpms_directory=None):
         self.log = log
         self.pwd = os.path.realpath(os.path.dirname(os.path.realpath(__file__)))
         self.descriptor = os.path.realpath(descriptor)
@@ -29,6 +29,7 @@ class Generator(object):
         self.scripts = scripts
         self.additional_scripts = additional_scripts
         self.ssl_verify = ssl_verify
+        self.rpms_directory = rpms_directory
 
         if self.dist_git:
             self.git = Git(self.log, os.path.dirname(self.descriptor), self.output)
@@ -93,6 +94,11 @@ class Generator(object):
             if os.path.exists(scripts) and os.path.isdir(scripts):
                 self.scripts = scripts
 
+        if not self.rpms_directory:
+            rpms_d = os.path.join(os.path.dirname(self.descriptor), "rpms")
+            if os.path.exists(rpms_d) and os.path.isdir(rpms_d):
+                self.rpms_directory = rpms_d
+
         with open(self.descriptor, 'r') as stream:
             self.cfg = yaml.safe_load(stream)
 
@@ -141,8 +147,23 @@ class Generator(object):
             # Poor-man's workaround for not copying multiple times the same thing
             if not os.path.exists(output_path):
                 self.log.info("Copying package '%s'..." % package)
+                print(self.scripts)
                 shutil.copytree(src=os.path.join(self.scripts, package), dst=output_path)
                 self.log.debug("Done.")
+
+    def _handle_additional_rpms(self):
+        self.log.info("Injecting custom rpms")
+        rpms_path = os.path.join(self.output, "rpms")
+        if os.path.exists(rpms_path):
+            shutil.rmtree(rpms_path)
+        shutil.copytree(src=self.rpms_directory, dst=rpms_path)
+
+        rpms = glob.glob(os.path.join(self.output, "rpms", "*.rpm"))
+
+        self.log.debug("Found following additional rpm files: %s" % ", ".join(rpms))
+        self.cfg['rpms'] = []
+        for f in rpms:
+            self.cfg['rpms'].append(os.path.basename(f))
 
     def _handle_additional_scripts(self):
         self.log.info("Additional scripts provided, installing them...")
@@ -209,6 +230,9 @@ class Generator(object):
         # Additional scripts (not package scripts)
         if self.additional_scripts:
             self._handle_additional_scripts()
+
+        if self.rpms_directory:
+            self._handle_additional_rpms()
 
         self._handle_custom_repo_files()
 

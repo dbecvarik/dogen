@@ -58,9 +58,13 @@ USER root
 # Add custom repo files
 ADD scripts/*.repo /etc/yum.repos.d/
 {% endif %}
+{% if rpms %}
+# Add custom rpm files
+ADD rpms/*.rpm /tmp/rpms/
+{% endif %}
 
 # Install required RPMs
-RUN yum install -y {% if additional_repos -%} --disablerepo=\* {%- for repo in additional_repos %} --enablerepo={{ repo }}{% endfor %}{% endif %} {%- for package in packages %} {{ package }}{% endfor %} \
+RUN yum install -y {% if additional_repos -%} --disablerepo=\* {%- for repo in additional_repos %} --enablerepo={{ repo }}{% endfor %}{% endif %} {%- for package in packages %} {{ package }}{% endfor %} {%- for rpm in rpms %} /tmp/rpms/{{ rpm }} {% endfor %} \
     && yum clean all
 
 {% if additional_repos %}
