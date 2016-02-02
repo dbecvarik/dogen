@@ -100,6 +100,11 @@ USER root
 RUN [ "bash", "-x", "/tmp/scripts/{{ script.package }}/{{ script.exec }}" ]
 
 {% endfor %}
+# Run cct if needed
+{% if cct %}
+RUN cct {%if cct.verbose %}-v{% endif %} run{%for change in cct.changes %} {{ change }}{% endfor %}
+{% endif %}
+
 # Cleanup the scripts directory
 USER root
 RUN rm -rf /tmp/scripts
