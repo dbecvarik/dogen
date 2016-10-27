@@ -86,18 +86,6 @@ COPY \
 
 {% endif %}
 
-{%- if scripts %}
-# Add scripts used to configure the image
-COPY scripts /tmp/scripts
-
-# Custom scripts
-{% for script in scripts %}
-USER {{ script.user }}
-RUN [ "bash", "-x", "/tmp/scripts/{{ script.package }}/{{ script.exec }}" ]
-
-{% endfor %}
-{% endif %}
-
 {% if cct %}
 # Run cct if needed
 COPY cct /tmp/cct/
@@ -108,6 +96,18 @@ RUN cct {%if cct.verbose %}-v{% endif %} {% for run in cct.run %} /tmp/cct/{{ ru
 # Add cct in command mode as entrypoint
 # you can specify path to changes files in CCT_CHANGES environment variable
 ENTRYPOINT ["/usr/bin/cct", {% if cct.runtime_changes -%}"{{ cct.runtime_changes }}", {% endif -%}"-c"]
+{% endif %}
+
+{%- if scripts %}
+# Add scripts used to configure the image
+COPY scripts /tmp/scripts
+
+# Custom scripts
+{% for script in scripts %}
+USER {{ script.user }}
+RUN [ "bash", "-x", "/tmp/scripts/{{ script.package }}/{{ script.exec }}" ]
+
+{% endfor %}
 {% endif %}
 
 {%- if scripts %}
