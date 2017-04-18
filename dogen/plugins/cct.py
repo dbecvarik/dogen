@@ -40,7 +40,7 @@ class CCT(Plugin):
         # we are delaying import because CCT Plugin is not mandatory
         try:
             from cct.cli.main import CCT_CLI
-        except:
+        except ImportError:
             raise Exception("CCT plugin requires CCT to run - get it from https://github.com/containers-tools/cct")
 
         cfg['cct']['run'] = ['cct.yaml']
