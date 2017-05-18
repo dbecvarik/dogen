@@ -32,7 +32,10 @@ class CCT(Plugin):
     def setup_cct(self, version):
         cctdist = '%s/.dogen/plugin/cct/%s/%s.zip' % (os.path.expanduser('~'), version, version)
         cct_runtime = '%s/.dogen/plugin/cct/%s/cct.zip' % (os.path.expanduser('~'), version)
-        if os.path.exists(cctdist):
+        if version == 'master':
+            # we dont care if it doesnt exist - so we ignore errors here
+            shutil.rmtree('%s/.dogen/plugin/cct/%s/' % (os.path.expanduser('~'), version), ignore_errors=True)
+        elif os.path.exists(cctdist):
             return cct_runtime
 
         os.makedirs(os.path.dirname(cctdist))
