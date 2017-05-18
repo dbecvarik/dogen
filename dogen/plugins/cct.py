@@ -113,13 +113,11 @@ class CCT(Plugin):
 
         self.log.info("CCT plugin downloaded artifacts")
 
-        cfg['entrypoint'] = ['/usr/bin/cct']
-
         if 'runtime' in cfg['cct']:
+            cfg['entrypoint'] = ['/usr/bin/cct']
             self.runtime_changes(cfg)
             cfg['entrypoint'].append(cfg['cct']['runtime_changes'])
-
-        cfg['entrypoint'].append("-c")
+            cfg['entrypoint'].append("-c")
 
         if 'user' not in cfg['cct']:
             cfg['cct']['user'] = 'root'
